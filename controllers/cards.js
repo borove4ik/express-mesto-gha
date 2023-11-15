@@ -20,9 +20,14 @@ module.exports.createCard = async (req, res) => {
     .create({ name, link, owner })
     .then((newCard) => res.status(statuses.CREATED).send(newCard))
     .catch((err) => {
-      res
-        .status(statuses.BAD_REQUEST)
-        .send({ message: `Не удалось добавить карточку ${err}` });
+      if (err.name === 'ValidationError') {
+        res
+          .status(statuses.BAD_REQUEST)
+          .send({ message: 'Не удалось добавить карточку' });
+      } else {
+        res.status(statuses.SERVER_ERROR)
+          .send({ message: 'Ошибка на стороне сервера' });
+      }
     });
 };
 

@@ -19,14 +19,18 @@ module.exports.createUser = async (req, res) => {
     .create({ name, about, avatar })
     .then((newUser) => res.status(statuses.CREATED).send(newUser))
     .catch((err) => {
-      console.log(err);
-      res
-        .status(statuses.SERVER_ERROR)
-        .send({ message: 'Не удалось добавить карточку' });
+      if (err.name === 'ValidationError') {
+        res
+          .status(statuses.BAD_REQUEST)
+          .send({ message: 'Не удалось добавить пользователя' });
+      } else {
+        res.status(statuses.SERVER_ERROR)
+          .send({ message: 'Ошибка на стороне сервера' });
+      }
     });
 };
 
-module.exports.getUserById = async (req, res, next) => {
+module.exports.getUserById = async (req, res) => {
   const { userId } = req.params;
   user
     .findById(userId)
@@ -37,21 +41,30 @@ module.exports.getUserById = async (req, res, next) => {
         res.send(userData);
       }
     })
-    .catch(next);
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        res
+          .status(statuses.BAD_REQUEST)
+          .send({ message: 'Не удалось добавить пользователя' });
+      } else {
+        res.status(statuses.SERVER_ERROR)
+          .send({ message: 'Ошибка на стороне сервера' });
+      }
+    });
 };
 
 module.exports.updateUser = async (req, res) => {
   const { _id } = req.user;
   const { name, about } = req.body;
   user
-    .updateOne({ _id }, { name, about })
+    .findByIdAndUpdate({ _id }, { name, about }, { new: true, runValidators: true })
     .then(() => {
       res.status(statuses.OK_REQUEST).send({ _id, name, about });
     })
     .catch((err) => {
       console.log(err);
       res
-        .status(statuses.BAD_REQUEST)
+        .status(statuses.SERVER_ERROR)
         .send({ message: 'Не удалось изменить информацию' });
     });
 };
