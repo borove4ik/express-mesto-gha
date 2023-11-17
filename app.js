@@ -34,7 +34,7 @@ app.use((req, res, next) => {
 app.use('/users', userRouter);
 app.use('/cards', cardRouter);
 
-app.all('*', (res) => {
+app.all('*', (req, res) => {
   res.status(statuses.NOT_FOUND).send({message: 'Запрашиваемый ресурс не найден'})
 })
 

@@ -35,8 +35,23 @@ module.exports.deleteCard = async (req, res) => {
   const { cardId } = req.params;
   card
     .deleteOne({ _id: cardId })
-    .then((deletedCard) => res.send({ data: deletedCard }))
-    .catch(() => res.status(statuses.SERVER_ERROR).send({ message: 'Произошла ошибка' }));
+    .then((message) => {
+      if (message.deletedCount === 0) {
+        res.status(statuses.NOT_FOUND).send('Карточка не найдена');
+      } else {
+        res.send(message);
+      }
+    })
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        res
+          .status(statuses.BAD_REQUEST)
+          .send({ message: 'Не удалось добавить карточку' });
+      } else {
+        res.status(statuses.SERVER_ERROR)
+          .send({ message: 'Ошибка на стороне сервера' });
+      }
+    });
 };
 
 module.exports.likeCard = (req, res) => {
@@ -47,7 +62,16 @@ module.exports.likeCard = (req, res) => {
       { new: true },
     )
     .then((likedCard) => res.status(statuses.OK_REQUEST).send(likedCard))
-    .catch(() => res.status(statuses.SERVER_ERROR).send({ message: 'Произошла ошибка' }));
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        res
+          .status(statuses.BAD_REQUEST)
+          .send({ message: 'Не удалось добавить лайк' });
+      } else {
+        res.status(statuses.SERVER_ERROR)
+          .send({ message: 'Ошибка на стороне сервера' });
+      }
+    });
 };
 
 module.exports.dislikeCard = (req, res) => {
@@ -58,5 +82,14 @@ module.exports.dislikeCard = (req, res) => {
       { new: true },
     )
     .then((dislikedCard) => res.status(statuses.OK_REQUEST).send(dislikedCard))
-    .catch(() => res.status(statuses.SERVER_ERROR).send({ message: 'Произошла ошибка' }));
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        res
+          .status(statuses.BAD_REQUEST)
+          .send({ message: 'Не удалось удалить лайк' });
+      } else {
+        res.status(statuses.SERVER_ERROR)
+          .send({ message: 'Ошибка на стороне сервера' });
+      }
+    });
 };

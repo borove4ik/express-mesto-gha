@@ -62,10 +62,14 @@ module.exports.updateUser = async (req, res) => {
       res.status(statuses.OK_REQUEST).send({ _id, name, about });
     })
     .catch((err) => {
-      console.log(err);
-      res
-        .status(statuses.SERVER_ERROR)
-        .send({ message: 'Не удалось изменить информацию' });
+      if (err.name === 'ValidationError') {
+        res
+          .status(statuses.BAD_REQUEST)
+          .send({ message: 'Не удалось обновить информацию' });
+      } else {
+        res.status(statuses.SERVER_ERROR)
+          .send({ message: 'Ошибка на стороне сервера' });
+      }
     });
 };
 
@@ -78,9 +82,13 @@ module.exports.updateAvatar = async (req, res) => {
       res.status(statuses.OK_REQUEST).send({ _id, avatar });
     })
     .catch((err) => {
-      console.log(err);
-      res
-        .status(statuses.BAD_REQUEST)
-        .send({ message: 'Не удалось изменить информацию' });
+      if (err.name === 'ValidationError') {
+        res
+          .status(statuses.BAD_REQUEST)
+          .send({ message: 'Не удалось обновить аватар' });
+      } else {
+        res.status(statuses.SERVER_ERROR)
+          .send({ message: 'Ошибка на стороне сервера' });
+      }
     });
 };
