@@ -77,7 +77,7 @@ module.exports.updateAvatar = async (req, res) => {
   const { _id } = req.user;
   const { avatar } = req.body;
   user
-    .updateOne({ _id }, { avatar })
+    .updateOne({ _id }, { avatar }, { new: true }, { runValidators: true })
     .then(() => {
       res.status(statuses.OK_REQUEST).send({ _id, avatar });
     })
