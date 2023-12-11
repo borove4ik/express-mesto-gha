@@ -28,8 +28,7 @@ module.exports.createUser = async (req, res, next) => {
     .create({
       name, about, avatar, email, password: hashedPassword,
     })
-    .then((newUser) => {res.status(statuses.CREATED).send(newUser);
-      console.log(res)})
+    .then((newUser) => res.status(statuses.CREATED).send(newUser))
     .catch((err) => {
       if (err.name === 'ValidationError') {
         next(new BadRequestError('Не удалось добавить пользователя'));
