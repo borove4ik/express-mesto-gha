@@ -5,6 +5,8 @@ const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const userRouter = require('./routes/users');
 const cardRouter = require('./routes/cards');
+const cookieParser = require('cookie-parser');
+const auth = require('./middlewares/auth')
 
 const { PORT = 3000 } = process.env;
 
@@ -23,16 +25,9 @@ mongoose.connect('mongodb://127.0.0.1:27017/mestodb', {
   useNewUrlParser: true,
 });
 
-app.use((req, res, next) => {
-  req.user = {
-    _id: '65528043b5000956c2c002c0', // вставьте сюда _id созданного в предыдущем пункте пользователя
-  };
-
-  next();
-});
-
 app.use('/users', userRouter);
-app.use('/cards', cardRouter);
+app.use('/cards', auth, cardRouter);
+
 
 app.all('*', (req, res) => {
   res.status(statuses.NOT_FOUND).send({message: 'Запрашиваемый ресурс не найден'})
@@ -41,3 +36,9 @@ app.all('*', (req, res) => {
 app.listen(PORT, () => {
   console.log(`App listening on port ${PORT}`);
 });
+
+app.use(cookieParser())
+
+app.use((err, req, res, next) => {
+  res.status(err.statusCode).send({message: err.message})
+})
