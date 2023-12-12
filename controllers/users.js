@@ -23,21 +23,25 @@ module.exports.createUser = async (req, res, next) => {
   const {
     name, about, avatar, email, password,
   } = req.body;
-  const hashedPassword = await bcrypt.hash(password, 10);
-  User
-    .create({
-      name, about, avatar, email, password: hashedPassword,
-    })
-    .then((newUser) => res.status(statuses.CREATED).send(newUser))
-    .catch((err) => {
-      if (err.name === 'ValidationError') {
-        next(new BadRequestError('Не удалось добавить пользователя'));
-      } else if (err.code === 11000) {
-        next(new MongoDuplicateConflict('Пользователь с таким email уже существует'));
-      } else {
-        next(res.status(statuses.SERVER_ERROR).send({ message: 'Ошибка на стороне сервера' }));
-      }
-    });
+  if (!password || !email) {
+    next(new BadRequestError('Не удалось добавить пользователя'));
+  } else {
+    const hashedPassword = await bcrypt.hash(password, 10);
+    User
+      .create({
+        name, about, avatar, email, password: hashedPassword,
+      })
+      .then((newUser) => res.status(statuses.CREATED).send(newUser))
+      .catch((err) => {
+        if (err.name === 'ValidationError') {
+          next(new BadRequestError('Не удалось добавить пользователя'));
+        } else if (err.code === 11000) {
+          next(new MongoDuplicateConflict('Пользователь с таким email уже существует'));
+        } else {
+          next(res.status(statuses.SERVER_ERROR).send({ message: 'Ошибка на стороне сервера' }));
+        }
+      });
+  }
 };
 
 const getUserById = (req, res, userData, next) => {
