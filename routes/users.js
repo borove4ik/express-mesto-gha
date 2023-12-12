@@ -3,10 +3,10 @@ const auth = require('../middlewares/auth');
 
 const {
   getUsers,
-  createUser,
+  // createUser,
   updateUser,
   updateAvatar,
-  login,
+  // login,
   getAuthorizedUserInfo,
 } = require('../controllers/users');
 
@@ -17,10 +17,6 @@ userRouter.get('/', getUsers);
 userRouter.patch('/me', auth, updateUser);
 
 userRouter.patch('/me/avatar', auth, updateAvatar);
-
-userRouter.post('/signin', login);
-
-userRouter.post('/signup', createUser);
 
 userRouter.get('/me', auth, getAuthorizedUserInfo);
 
