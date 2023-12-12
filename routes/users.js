@@ -14,10 +14,10 @@ userRouter.get('/', getUsers);
 
 // userRouter.get('/:userId', getUserById);
 
-userRouter.patch('/me', auth, updateUser);
+userRouter.patch('/me', updateUser);
 
-userRouter.patch('/me/avatar', auth, updateAvatar);
+userRouter.patch('/me/avatar', updateAvatar);
 
-userRouter.get('/me', auth, getAuthorizedUserInfo);
+userRouter.get('/me', getAuthorizedUserInfo);
 
 module.exports = userRouter;
