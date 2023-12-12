@@ -102,14 +102,14 @@ module.exports.login = async (req, res, next) => {
 
   const foundUser = await User.findOne({ email }).select('+password');
   if (!foundUser) {
-    next(BadRequestError('пользователь с таким email не найден'));
+    next(new BadRequestError('пользователь с таким email не найден'));
+  } else {
+    const compareResult = await bcrypt.compare(password, foundUser.password);
+    if (!compareResult) {
+      next(new BadRequestError('Неверный пароль'));
+    }
+    const token = generateToken({ _id: foundUser._id });
+    res.cookie('_id', token, { maxAge: 3600000 * 24 * 7, httpOnly: true });
+    return res.status(statuses.OK_REQUEST).send({ message: 'Успешно!' });
   }
-  const compareResult = await bcrypt.compare(password, foundUser.password);
-
-  if (!compareResult) {
-    next(BadRequestError('Неверный пароль'));
-  }
-  const token = generateToken({ _id: foundUser._id });
-  res.cookie('_id', token, { maxAge: 3600000 * 24 * 7, httpOnly: true });
-  return res.status(statuses.OK_REQUEST).send({ message: 'Успешно!' });
 };
