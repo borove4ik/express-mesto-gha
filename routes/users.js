@@ -1,5 +1,4 @@
 const userRouter = require('express').Router();
-const auth = require('../middlewares/auth');
 
 const {
   getUsers,

@@ -23,7 +23,6 @@ module.exports.createUser = async (req, res, next) => {
   const {
     name, about, avatar, email, password,
   } = req.body;
-    console.log(req.body, {name, about, avatar, email, password});
   const hashedPassword = await bcrypt.hash(password, 10);
   User
     .create({
