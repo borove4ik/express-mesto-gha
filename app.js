@@ -8,13 +8,17 @@ const cardRouter = require('./routes/cards');
 const cookieParser = require('cookie-parser');
 const auth = require('./middlewares/auth');
 const {createUser, login} = require('./controllers/users');
+const { errors } = require('celebrate')
+const { signUpValidation, signInValidation} = require('./middlewares/celebrateValidation');
+
 
 const { PORT = 3000 } = process.env;
 
 const statuses = require('./utils/statusCodes');
+const { celebrate } = require('celebrate');
 
 const app = express();
-
+app.use(errors());
 app.use(bodyParser.json());
 app.use(
   bodyParser.urlencoded({
@@ -30,9 +34,9 @@ app.use('/users', auth, userRouter);
 app.use('/cards', auth, cardRouter);
 
 
-app.post('/signin', login);
+app.post('/signin', signInValidation, login );
 
-app.post('/signup', createUser);
+app.post('/signup', signUpValidation, createUser);
 
 
 app.all('*', (req, res) => {
@@ -48,3 +52,5 @@ app.use(cookieParser())
 app.use((err, req, res, next) => {
   res.status(err.statusCode).send({message: err.message})
 })
+
+// signInValidation, signUpvalidation
