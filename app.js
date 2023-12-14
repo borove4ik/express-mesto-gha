@@ -18,7 +18,6 @@ const statuses = require('./utils/statusCodes');
 const { celebrate } = require('celebrate');
 
 const app = express();
-app.use(errors());
 app.use(bodyParser.json());
 app.use(
   bodyParser.urlencoded({
@@ -48,6 +47,8 @@ app.listen(PORT, () => {
 });
 
 app.use(cookieParser())
+
+app.use(errors());
 
 app.use((err, req, res, next) => {
   res.status(err.statusCode).send({message: err.message})
