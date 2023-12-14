@@ -29,7 +29,7 @@ mongoose.connect('mongodb://127.0.0.1:27017/mestodb', {
   useNewUrlParser: true,
 });
 
-app.use('/users', auth, userRouter);
+app.use('/users', userRouter);
 app.use('/cards', auth, cardRouter);
 
 

@@ -1,12 +1,11 @@
 const bcrypt = require('bcryptjs');
 const User = require('../models/user');
 const generateToken = require('../utils/jwt');
-
 const NotFoundError = require('../errors/notFound');
 const MongoDuplicateConflict = require('../errors/mongoDuplicate');
-
 const statuses = require('../utils/statusCodes');
 const BadRequestError = require('../errors/badRequest');
+const UnauthorizedError = require('../errors/unauthorized');
 
 module.exports.getUsers = async (req, res) => {
   try {
@@ -31,7 +30,8 @@ module.exports.createUser = async (req, res, next) => {
       .create({
         name, about, avatar, email, password: hashedPassword,
       })
-      .then((newUser) => res.status(statuses.CREATED).send(newUser))
+      // eslint-disable-next-line no-shadow
+      .then(({ password, ...newUser }) => res.status(statuses.CREATED).send(newUser))
       .catch((err) => {
         if (err.name === 'ValidationError') {
           next(new BadRequestError('Не удалось добавить пользователя'));
@@ -47,7 +47,7 @@ module.exports.createUser = async (req, res, next) => {
 const getUserById = (req, res, userData, next) => {
   User.findById(userData)
     .orFail(new NotFoundError('Пользователь по указанному _id не найден'))
-    .then((user) => res.status(statuses.OK_REQUEST).send(user))
+    .then(({ password, ...user }) => res.status(statuses.OK_REQUEST).send(user))
     .catch((error) => {
       next(error);
     });
@@ -97,16 +97,17 @@ module.exports.updateAvatar = async (req, res, next) => {
     });
 };
 
+// eslint-disable-next-line consistent-return
 module.exports.login = async (req, res, next) => {
   const { email, password } = req.body;
 
   const foundUser = await User.findOne({ email }).select('+password');
   if (!foundUser) {
-    next(new BadRequestError('пользователь с таким email не найден'));
+    next(new UnauthorizedError('пользователь с таким email не найден'));
   } else {
     const compareResult = await bcrypt.compare(password, foundUser.password);
     if (!compareResult) {
-      next(new BadRequestError('Неверный пароль'));
+      next(new UnauthorizedError('Неверный пароль'));
     }
     const token = generateToken({ _id: foundUser._id });
     res.cookie('_id', token, { maxAge: 3600000 * 24 * 7, httpOnly: true });
