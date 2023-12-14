@@ -9,7 +9,7 @@ const {
 } = require('../controllers/users');
 const auth = require('../middlewares/auth');
 
-userRouter.get('/', getUsers);
+userRouter.get('/', auth, getUsers);
 
 userRouter.get('/:userId', usersIdValidation, getUser);
 
