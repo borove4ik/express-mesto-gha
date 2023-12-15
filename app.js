@@ -18,7 +18,9 @@ const statuses = require('./utils/statusCodes');
 const { celebrate } = require('celebrate');
 
 const app = express();
-app.use(bodyParser.json());
+app.use(express.json());
+app.use(cookieParser());
+
 app.use(
   bodyParser.urlencoded({
     extended: true,
@@ -29,7 +31,7 @@ mongoose.connect('mongodb://127.0.0.1:27017/mestodb', {
   useNewUrlParser: true,
 });
 
-app.use('/users', userRouter);
+app.use('/users', auth, userRouter);
 app.use('/cards', auth, cardRouter);
 
 
@@ -46,11 +48,11 @@ app.listen(PORT, () => {
   console.log(`App listening on port ${PORT}`);
 });
 
-app.use(cookieParser())
 
 app.use(errors());
 
 app.use((err, req, res, next) => {
+  console.log(err)
   res.status(err.statusCode).send({message: err.message})
 })
 

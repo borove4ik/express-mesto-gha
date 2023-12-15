@@ -7,16 +7,16 @@ const {
   updateAvatar,
   getAuthorizedUserInfo,
 } = require('../controllers/users');
-const auth = require('../middlewares/auth');
+// const auth = require('../middlewares/auth');
 
-userRouter.get('/', auth, getUsers);
+userRouter.get('/', getUsers);
+
+userRouter.get('/me', getAuthorizedUserInfo);
 
 userRouter.get('/:userId', usersIdValidation, getUser);
 
-userRouter.patch('/me', auth, userInfoValidation, updateUser);
+userRouter.patch('/me', userInfoValidation, updateUser);
 
-userRouter.patch('/me/avatar', auth, userAvatarValidation, updateAvatar);
-
-userRouter.get('/me', getAuthorizedUserInfo);
+userRouter.patch('/me/avatar', userAvatarValidation, updateAvatar);
 
 module.exports = userRouter;

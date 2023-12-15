@@ -52,7 +52,12 @@ module.exports.createUser = async (req, res, next) => {
 const getUserById = (req, res, userData, next) => {
   User.findById(userData)
     .orFail(new NotFoundError('Пользователь по указанному _id не найден'))
-    .then(({ password, ...user }) => res.status(statuses.OK_REQUEST).send(user))
+    .then((user) => res.status(statuses.OK_REQUEST).send({
+      name: user.name,
+      about: user.about,
+      avatar: user.avatar,
+      email: user.email,
+    }))
     .catch((error) => {
       next(error);
     });
@@ -64,6 +69,7 @@ module.exports.getUser = async (req, res, next) => {
 };
 
 module.exports.getAuthorizedUserInfo = (req, res, next) => {
+  console.log(req.user);
   const userData = req.user._id;
   getUserById(req, res, userData, next);
 };
@@ -115,7 +121,13 @@ module.exports.login = async (req, res, next) => {
       next(new UnauthorizedError('Неверный пароль'));
     }
     const token = generateToken({ _id: foundUser._id });
-    res.cookie('_id', token, { maxAge: 3600000 * 24 * 7, httpOnly: true });
-    return res.status(statuses.OK_REQUEST).send({ message: 'Успешно!' });
+    res.cookie('_id', token, {
+      maxAge: 3600000 * 24 * 7,
+      httpOnly: true,
+      sameSite: true,
+      secure: true,
+
+    });
+    return res.send({ token });
   }
 };
