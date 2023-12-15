@@ -63,12 +63,11 @@ module.exports.likeCard = (req, res, next) => {
     .orFail(new NotFoundError('Передан несуществующий _id карточки'))
     .then((likedCard) => res.status(statuses.OK_REQUEST).send(likedCard))
     .catch((err) => {
-      next(err);
-      // if (err.name === 'CastError') {
-      //   next(new BadRequestError('Не удалось добавить лайк'));
-      // } else {
-      //   next(res.status(statuses.SERVER_ERROR).send({ message: 'Ошибка на стороне сервера' }));
-      // }
+      if (err.name === 'CastError') {
+        next(new BadRequestError('Не удалось добавить лайк'));
+      } else {
+        next(err);
+      }
     });
 };
 
@@ -79,12 +78,13 @@ module.exports.dislikeCard = (req, res, next) => {
       { $pull: { likes: req.user._id } }, // убрать _id из массива
       { new: true },
     )
+    .orFail(new NotFoundError('Картчока с данным id не найдена'))
     .then((dislikedCard) => res.status(statuses.OK_REQUEST).send(dislikedCard))
     .catch((err) => {
       if (err.name === 'CastError') {
         next(new BadRequestError('Не удалось добавить лайк'));
       } else {
-        next(res.status(statuses.SERVER_ERROR).send({ message: 'Ошибка на стороне сервера' }));
+        next(err);
       }
     });
 };
