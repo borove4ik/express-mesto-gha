@@ -60,13 +60,15 @@ module.exports.likeCard = (req, res, next) => {
       { $addToSet: { likes: req.user._id } }, // добавить _id в массив, если его там нет
       { new: true },
     )
+    .orFail(new NotFoundError('Передан несуществующий _id карточки'))
     .then((likedCard) => res.status(statuses.OK_REQUEST).send(likedCard))
     .catch((err) => {
-      if (err.name === 'CastError') {
-        next(new BadRequestError('Не удалось добавить лайк'));
-      } else {
-        next(res.status(statuses.SERVER_ERROR).send({ message: 'Ошибка на стороне сервера' }));
-      }
+      next(err);
+      // if (err.name === 'CastError') {
+      //   next(new BadRequestError('Не удалось добавить лайк'));
+      // } else {
+      //   next(res.status(statuses.SERVER_ERROR).send({ message: 'Ошибка на стороне сервера' }));
+      // }
     });
 };
 

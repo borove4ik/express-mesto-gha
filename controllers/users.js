@@ -69,7 +69,6 @@ module.exports.getUser = async (req, res, next) => {
 };
 
 module.exports.getAuthorizedUserInfo = (req, res, next) => {
-  console.log(req.user);
   const userData = req.user._id;
   getUserById(req, res, userData, next);
 };
