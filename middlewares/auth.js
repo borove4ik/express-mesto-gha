@@ -8,15 +8,11 @@ module.exports = (req, res, next) => {
     if ((authorization && authorization.startsWith('Bearer '))) {
       const token = authorization.replace('Bearer ', '');
       payload = jwt.verify(token, 'secret-key');
-      if (!payload._id) {
-        next(new UnauthorizedError('Неверные авторизационные данные 14'));
-      }
       req.user = payload;
-      next();
-    } else {
-      next(new UnauthorizedError('Неверные авторизационные данные 14'));
+      return next();
     }
+    return next(new UnauthorizedError('Неверные авторизационные данные 14'));
   } catch (error) {
-    next(new UnauthorizedError('Неверные авторизационные данные'));
+    return next(new UnauthorizedError('Неверные авторизационные данные'));
   }
 };

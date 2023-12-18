@@ -7,14 +7,12 @@ const statuses = require('../utils/statusCodes');
 const BadRequestError = require('../errors/badRequest');
 const UnauthorizedError = require('../errors/unauthorized');
 
-module.exports.getUsers = async (req, res) => {
+module.exports.getUsers = async (req, res, next) => {
   try {
     const users = await User.find({});
     return res.send(users);
   } catch (error) {
-    return res
-      .status(statuses.SERVER_ERROR)
-      .send({ message: 'Ошибка на стороне сервера' });
+    return next(error);
   }
 };
 
@@ -22,31 +20,26 @@ module.exports.createUser = async (req, res, next) => {
   const {
     name, about, avatar, email, password,
   } = req.body;
-  if (!password || !email) {
-    next(new BadRequestError('Не удалось добавить пользователя'));
-  } else {
-    const hashedPassword = await bcrypt.hash(password, 10);
-    User
-      .create({
-        name, about, avatar, email, password: hashedPassword,
-      })
-      // eslint-disable-next-line no-shadow
-      .then((newUser) => res.status(statuses.CREATED).send({
-        name: newUser.name,
-        about: newUser.about,
-        avatar: newUser.avatar,
-        email: newUser.email,
-      }))
-      .catch((err) => {
-        if (err.name === 'ValidationError') {
-          next(new BadRequestError('Не удалось добавить пользователя'));
-        } else if (err.code === 11000) {
-          next(new MongoDuplicateConflict('Пользователь с таким email уже существует'));
-        } else {
-          next(res.status(statuses.SERVER_ERROR).send({ message: 'Ошибка на стороне сервера' }));
-        }
-      });
-  }
+  const hashedPassword = await bcrypt.hash(password, 10);
+  return User
+    .create({
+      name, about, avatar, email, password: hashedPassword,
+    })
+  // eslint-disable-next-line no-shadow
+    .then((newUser) => res.status(statuses.CREATED).send({
+      name: newUser.name,
+      about: newUser.about,
+      avatar: newUser.avatar,
+      email: newUser.email,
+    }))
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        return next(new BadRequestError('Не удалось добавить пользователя'));
+      } if (err.code === 11000) {
+        return next(new MongoDuplicateConflict('Пользователь с таким email уже существует'));
+      }
+      return next(err);
+    });
 };
 
 const getUserById = (req, res, userData, next) => {
@@ -58,9 +51,7 @@ const getUserById = (req, res, userData, next) => {
       avatar: user.avatar,
       email: user.email,
     }))
-    .catch((error) => {
-      next(error);
-    });
+    .catch((error) => next(error));
 };
 
 module.exports.getUser = async (req, res, next) => {
@@ -83,10 +74,9 @@ module.exports.updateUser = async (req, res, next) => {
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        next(new BadRequestError('Не удалось обновить информацию'));
-      } else {
-        next(res.status(statuses.SERVER_ERROR).send({ message: 'Ошибка на стороне сервера' }));
+        return next(new BadRequestError('Не удалось обновить информацию'));
       }
+      return next(err);
     });
 };
 
@@ -94,16 +84,15 @@ module.exports.updateAvatar = async (req, res, next) => {
   const { _id } = req.user;
   const { avatar } = req.body;
   User
-    .updateOne({ _id }, { avatar }, { new: true }, { runValidators: true })
+    .findByIdAndUpdate({ _id }, { avatar }, { new: true }, { runValidators: true })
     .then(() => {
       res.status(statuses.OK_REQUEST).send({ _id, avatar });
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        next(new BadRequestError('Не удалось обновить аватар'));
-      } else {
-        next(res.status(statuses.SERVER_ERROR).send({ message: 'Ошибка на стороне сервера' }));
+        return next(new BadRequestError('Не удалось обновить аватар'));
       }
+      return next(err);
     });
 };
 
@@ -113,20 +102,19 @@ module.exports.login = async (req, res, next) => {
 
   const foundUser = await User.findOne({ email }).select('+password');
   if (!foundUser) {
-    next(new UnauthorizedError('пользователь с таким email не найден'));
-  } else {
-    const compareResult = await bcrypt.compare(password, foundUser.password);
-    if (!compareResult) {
-      next(new UnauthorizedError('Неверный пароль'));
-    }
-    const token = generateToken({ _id: foundUser._id });
-    res.cookie('_id', token, {
-      maxAge: 3600000 * 24 * 7,
-      httpOnly: true,
-      sameSite: true,
-      secure: true,
-
-    });
-    return res.send({ token });
+    return next(new UnauthorizedError('пользователь с таким email не найден'));
   }
+  const compareResult = await bcrypt.compare(password, foundUser.password);
+  if (!compareResult) {
+    return next(new UnauthorizedError('Неверный пароль'));
+  }
+  const token = generateToken({ _id: foundUser._id });
+  res.cookie('_id', token, {
+    maxAge: 3600000 * 24 * 7,
+    httpOnly: true,
+    sameSite: true,
+    secure: true,
+
+  });
+  return res.send({ token });
 };

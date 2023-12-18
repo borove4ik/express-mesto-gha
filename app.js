@@ -16,6 +16,7 @@ const { PORT = 3000 } = process.env;
 
 const statuses = require('./utils/statusCodes');
 const { celebrate } = require('celebrate');
+const NotFoundError = require('./errors/notFound');
 
 const app = express();
 app.use(express.json());
@@ -40,8 +41,8 @@ app.post('/signin', signInValidation, login );
 app.post('/signup', signUpValidation, createUser);
 
 
-app.all('*', (req, res) => {
-  res.status(statuses.NOT_FOUND).send({message: 'Запрашиваемый ресурс не найден'})
+app.all('*', (req, res, next) => {
+ next(new NotFoundError('Запрашиваемый ресурс не найден'))
 })
 
 app.listen(PORT, () => {
@@ -53,7 +54,9 @@ app.use(errors());
 
 app.use((err, req, res, next) => {
   console.log(err)
-  res.status(err.statusCode).send({message: err.message})
+  res.status(err.statusCode || 500).send({
+    message: err.statusCode === statuses.SERVER_ERROR ? 'Ошибка на стороне сервера' : err.message,
+  });
 })
 
 // signInValidation, signUpvalidation

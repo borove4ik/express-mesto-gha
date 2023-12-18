@@ -7,14 +7,12 @@ const card = require('../models/card');
 const statuses = require('../utils/statusCodes');
 const statusCodes = require('../utils/statusCodes');
 
-module.exports.getCards = async (req, res) => {
+module.exports.getCards = async (req, res, next) => {
   try {
     const cards = await card.find({});
     return res.send(cards);
   } catch (error) {
-    return res
-      .status(statuses.SERVER_ERROR)
-      .send({ message: 'Ошибка на стороне сервера' });
+    return next(error);
   }
 };
 
@@ -26,10 +24,9 @@ module.exports.createCard = async (req, res, next) => {
     .then((newCard) => res.status(statuses.CREATED).send(newCard))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        next(new BadRequestError('Не удалось создать карточку'));
-      } else {
-        next(res.status(statuses.SERVER_ERROR).send({ message: 'Ошибка на стороне сервера' }));
+        return next(new BadRequestError('Не удалось создать карточку'));
       }
+      return next(err);
     });
 };
 
@@ -41,15 +38,14 @@ module.exports.deleteCard = async (req, res, next) => {
       if (requestedCard.owner.toString() !== req.user._id) {
         throw new ForbiddenError('Отсутствуют полномочия на удаление искомой единицы(карточки)');
       }
-      return card.deleteOne({ _id: cardId });
+      return requestedCard.deleteOne();
     })
     .then(() => res.status(statuses.OK_REQUEST).send({ message: 'Полномочия подтверждены: удалено' }))
     .catch((error) => {
       if (error.statusCode === statusCodes.BAD_REQUEST) {
-        next(new BadRequestError('Передан некорректный _id карточки'));
-      } else {
-        next(error);
+        return next(new BadRequestError('Передан некорректный _id карточки'));
       }
+      return next(error);
     });
 };
 
@@ -64,10 +60,9 @@ module.exports.likeCard = (req, res, next) => {
     .then((likedCard) => res.status(statuses.OK_REQUEST).send(likedCard))
     .catch((err) => {
       if (err.name === 'CastError') {
-        next(new BadRequestError('Не удалось добавить лайк'));
-      } else {
-        next(err);
+        return next(new BadRequestError('Не удалось добавить лайк'));
       }
+      return next(err);
     });
 };
 
@@ -82,9 +77,8 @@ module.exports.dislikeCard = (req, res, next) => {
     .then((dislikedCard) => res.status(statuses.OK_REQUEST).send(dislikedCard))
     .catch((err) => {
       if (err.name === 'CastError') {
-        next(new BadRequestError('Не удалось добавить лайк'));
-      } else {
-        next(err);
+        return next(new BadRequestError('Не удалось добавить лайк'));
       }
+      return next(err);
     });
 };
