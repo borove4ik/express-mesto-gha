@@ -5,7 +5,6 @@ const BadRequestError = require('../errors/badRequest');
 const card = require('../models/card');
 
 const statuses = require('../utils/statusCodes');
-const statusCodes = require('../utils/statusCodes');
 
 module.exports.getCards = async (req, res, next) => {
   try {
@@ -41,11 +40,11 @@ module.exports.deleteCard = async (req, res, next) => {
       return requestedCard.deleteOne();
     })
     .then(() => res.status(statuses.OK_REQUEST).send({ message: 'Полномочия подтверждены: удалено' }))
-    .catch((error) => {
-      if (error.statusCode === statusCodes.BAD_REQUEST) {
+    .catch((err) => {
+      if (err.name === 'CastError') {
         return next(new BadRequestError('Передан некорректный _id карточки'));
       }
-      return next(error);
+      return next(err);
     });
 };
 

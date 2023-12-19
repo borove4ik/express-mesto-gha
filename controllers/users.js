@@ -84,7 +84,7 @@ module.exports.updateAvatar = async (req, res, next) => {
   const { _id } = req.user;
   const { avatar } = req.body;
   User
-    .findByIdAndUpdate({ _id }, { avatar }, { new: true }, { runValidators: true })
+    .findByIdAndUpdate({ _id }, { avatar }, { new: true, runValidators: true })
     .then(() => {
       res.status(statuses.OK_REQUEST).send({ _id, avatar });
     })
@@ -96,7 +96,6 @@ module.exports.updateAvatar = async (req, res, next) => {
     });
 };
 
-// eslint-disable-next-line consistent-return
 module.exports.login = async (req, res, next) => {
   const { email, password } = req.body;
 
@@ -109,12 +108,11 @@ module.exports.login = async (req, res, next) => {
     return next(new UnauthorizedError('Неверный пароль'));
   }
   const token = generateToken({ _id: foundUser._id });
-  res.cookie('_id', token, {
+  return res.cookie('_id', token, {
     maxAge: 3600000 * 24 * 7,
     httpOnly: true,
     sameSite: true,
     secure: true,
 
   });
-  return res.send({ token });
 };
