@@ -108,11 +108,11 @@ module.exports.login = async (req, res, next) => {
     return next(new UnauthorizedError('Неверный пароль'));
   }
   const token = generateToken({ _id: foundUser._id });
-  return res.cookie('_id', token, {
+  res.cookie('_id', token, {
     maxAge: 3600000 * 24 * 7,
     httpOnly: true,
     sameSite: true,
     secure: true,
-
   });
+  res.send(foundUser);
 };
