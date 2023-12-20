@@ -114,5 +114,5 @@ module.exports.login = async (req, res, next) => {
     sameSite: true,
     secure: false,
   });
-  res.send(foundUser);
+  return res.send(foundUser);
 };
